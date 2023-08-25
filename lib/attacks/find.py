@@ -122,7 +122,11 @@ class SCCMHUNTER:
         else:
             logger.info("[-] Did not find System Management Container")
         if len(self.samname) > 0:
-            logger.info(f'[+] Found {len(self.samname)} computers with Full Control ACE')
+            total_control = list(set(self.samname))
+            logger.info(f'[+] Found {len(total_control)} computers with Full Control ACE')
+        if self.debug:
+            for sam in total_control:
+                logger.debug(f'[+] Found {sam} with Full Control Ace')
 
         # Done with ACL now check what's been published to the container if it exists. CAS, primary servers
         # and secondary servers will appear here.
