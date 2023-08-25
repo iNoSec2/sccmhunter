@@ -252,28 +252,31 @@ class SCCMHUNTER:
                                                            attributes="*",
                                                            paged_size=500, 
                                                            generator=False)
-            for entry in self.ldap_session.entries:
-                # dig into groups
-                # could probably make this better
-                if (entry['sAMAccounttype']) == 268435456:                      
-                    for member in entry['member']:
-                        member = escape_filter_chars(member)
-                        search_filter = f"(distinguishedName={member})"
-                        self.ldap_session.extend.standard.paged_search(self.search_base, 
-                                                                       search_filter, 
-                                                                       attributes="*", 
-                                                                       paged_size=500, 
-                                                                       generator=False)
-                        for entry in self.ldap_session.entries:
-                            sid = entry['objectSid']
-                            self.sid_resolver(sid)
-                if (entry['sAMAccountType']) == 805306369:
-                    samname = (entry['sAMAccountName'][0])         
-                    dnsname = entry['dNSHostName']
-                    if dnsname not in self.servers:
-                        self.servers.append(str(dnsname).lower())
-                    self.samname.append(str(samname).lower())
-                    resolved_sids.append(dnsname)
+            try:
+                for entry in self.ldap_session.entries:
+                    # dig into groups
+                    # could probably make this better
+                    if (entry['sAMAccounttype']) == 268435456:                      
+                        for member in entry['member']:
+                            member = escape_filter_chars(member)
+                            search_filter = f"(distinguishedName={member})"
+                            self.ldap_session.extend.standard.paged_search(self.search_base, 
+                                                                        search_filter, 
+                                                                        attributes="*", 
+                                                                        paged_size=500, 
+                                                                        generator=False)
+                            for entry in self.ldap_session.entries:
+                                sid = entry['objectSid']
+                                self.sid_resolver(sid)
+                    if (entry['sAMAccountType']) == 805306369:
+                        samname = (entry['sAMAccountName'][0])         
+                        dnsname = entry['dNSHostName']
+                        if dnsname not in self.servers:
+                            self.servers.append(str(dnsname).lower())
+                        self.samname.append(str(samname).lower())
+                        resolved_sids.append(dnsname)
+            except Exception as e:
+                logger.info(e)
         return resolved_sids
 
     def ace_parser(self, descriptor):
