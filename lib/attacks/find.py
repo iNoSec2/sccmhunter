@@ -159,11 +159,13 @@ class SCCMHUNTER:
         
         resolved_owners = self.sid_resolver(container_owners)
         for owner in resolved_owners:
-            logger.debug(f"[+] Found container owner: {owner}")
             if owner not in self.servers:
-                self.servers.append(owner)
+                logger.debug(f"[+] Found container owner: {owner}")
+                owner = str(owner).lower()
+                self.servers.append(owner.lower())
 
         for server in container_servers:
+            server = server.lower()
             if server not in self.servers:
                 self.servers.append(server)
 
@@ -208,7 +210,7 @@ class SCCMHUNTER:
                                 #might as well add it to the results list for SMB scanning
                                 dnshostname = entry["dNSHostName"]
                                 if dnshostname and dnshostname not in self.servers:
-                                    self.servers.append(dnshostname)
+                                    self.servers.append(str(dnshostname).lower())
                                 #return
                             _computers.append(copy.deepcopy(COMPUTER_DICT))
                     #if a group
@@ -233,15 +235,16 @@ class SCCMHUNTER:
 
 
         # show results
-        logger.info(f"[*] Found {len(self.servers)} total potential site servers.")
+        total_servers = list(set(self.servers))
+        logger.info(f"[*] Found {len(total_servers)} total potential site servers.")
         if self.debug:
-            for server in self.servers:
+            for server in total_servers:
                 logger.debug(f"[+] {server}")
 
         # log results if we found anything
-        if self.servers:
+        if total_servers:
             filename = "sccmhunter.log"
-            printlog(self.servers, self.logs_dir, filename)
+            printlog(total_servers, self.logs_dir, filename)
 
     def sid_resolver(self, sids):
         resolved_sids = []
@@ -329,4 +332,3 @@ class SCCMHUNTER:
                 logger.debug(tabulate(df, headers = 'keys', tablefmt = 'grid'))
         except:
             logger.info(f"[-] {log} file not found.")
-
